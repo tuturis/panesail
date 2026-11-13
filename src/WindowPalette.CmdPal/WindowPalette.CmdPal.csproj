@@ -1,0 +1,140 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>WindowPalette.CmdPal</RootNamespace>
+    <AssemblyName>WindowPalette.CmdPal</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <WindowsSdkPackageVersion Condition="'$(PaneSailStoreBuild)' != 'true'">10.0.26100.68-preview</WindowsSdkPackageVersion>
+    <WindowsSdkPackageVersion Condition="'$(PaneSailStoreBuild)' == 'true'">10.0.26100.87</WindowsSdkPackageVersion>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion Condition="'$(PaneSailStoreBuild)' != 'true'">10.0.19041.0</TargetPlatformMinVersion>
+    <TargetPlatformMinVersion Condition="'$(PaneSailStoreBuild)' == 'true'">10.0.22000.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition="'$(PaneSailStoreBuild)' != 'true'">10.0.19041.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="'$(PaneSailStoreBuild)' == 'true'">10.0.22000.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="..\..\LICENSE" Link="LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!-- Opt-in only. The ordinary package keeps its existing development identity. -->
+  <ItemGroup Condition="'$(PaneSailStoreBuild)' == 'true' and '$(PaneSailStoreManifest)' != ''">
+    <AppxManifest Include="$(PaneSailStoreManifest)" />
+  </ItemGroup>
+
+  <Target Name="ValidatePaneSailStoreIdentity" BeforeTargets="PrepareForBuild" Condition="'$(PaneSailStoreBuild)' == 'true'">
+    <Error Condition="'$(Platform)' != 'x64'" Text="PaneSail Store preparation currently supports x64 only." />
+    <Error Condition="'$(WindowsSdkPackageVersion)' != '10.0.26100.87'" Text="PaneSail Store preparation requires the selected stable Windows SDK projection." />
+    <Error Condition="'$(PublishTrimmed)' != 'false' or '$(PublishReadyToRun)' != 'false'" Text="PaneSail Store preparation must not transform redistributed SDK binaries through trimming or ReadyToRun." />
+    <Error Condition="'$(PaneSailStoreManifest)' == '' or !Exists('$(PaneSailStoreManifest)')" Text="Provide an existing, separately generated PaneSailStoreManifest." />
+    <Error Condition="'$(PaneSailStoreIdentityName)' == '' or '$(PaneSailStorePublisher)' == '' or '$(PaneSailStorePublisherDisplayName)' == ''" Text="Supply the exact Partner Center identity name, publisher and publisher display name." />
+    <Error Condition="'$(PaneSailStoreIdentityName)' == 'WindowPalette.650a2c0b926c' or '$(PaneSailStorePublisher)' == 'CN=WindowPalette.Development'" Text="The development package identity cannot be used for a Store build." />
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Name"><Output TaskParameter="Result" PropertyName="_StoreManifestName" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Publisher"><Output TaskParameter="Result" PropertyName="_StoreManifestPublisher" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="/*[local-name()='Package']/*[local-name()='Properties']/*[local-name()='PublisherDisplayName']/text()"><Output TaskParameter="Result" PropertyName="_StoreManifestPublisherDisplayName" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Version"><Output TaskParameter="Result" PropertyName="_StoreManifestVersion" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='ExeServer']/*[local-name()='Class']/@Id"><Output TaskParameter="Result" PropertyName="_StoreManifestClassId" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='CreateInstance']/@ClassId"><Output TaskParameter="Result" PropertyName="_StoreManifestActivationId" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='StartupTask']/@TaskId"><Output TaskParameter="Result" PropertyName="_StoreManifestStartupId" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='AppExtension']/@Id"><Output TaskParameter="Result" PropertyName="_StoreManifestExtensionId" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='TargetDeviceFamily' and @Name='Windows.Universal']/@MinVersion"><Output TaskParameter="Result" PropertyName="_StoreUniversalMin" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='TargetDeviceFamily' and @Name='Windows.Universal']/@MaxVersionTested"><Output TaskParameter="Result" PropertyName="_StoreUniversalMax" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='TargetDeviceFamily' and @Name='Windows.Desktop']/@MinVersion"><Output TaskParameter="Result" PropertyName="_StoreDesktopMin" /></XmlPeek>
+    <XmlPeek XmlInputPath="$(PaneSailStoreManifest)" Query="//*[local-name()='TargetDeviceFamily' and @Name='Windows.Desktop']/@MaxVersionTested"><Output TaskParameter="Result" PropertyName="_StoreDesktopMax" /></XmlPeek>
+    <Error Condition="'$(_StoreManifestName)' != '$(PaneSailStoreIdentityName)' or '$(_StoreManifestPublisher)' != '$(PaneSailStorePublisher)' or '$(_StoreManifestPublisherDisplayName)' != '$(PaneSailStorePublisherDisplayName)'" Text="Store manifest identity does not match the supplied Partner Center values." />
+    <Error Condition="'$(_StoreManifestVersion)' != '0.3.0.0' or '$(_StoreManifestClassId)' != 'C56BE4C0-5ADB-47CB-A9D6-859ED1AD66D1' or '$(_StoreManifestActivationId)' != 'C56BE4C0-5ADB-47CB-A9D6-859ED1AD66D1' or '$(_StoreManifestStartupId)' != 'PaneSail.Background' or '$(_StoreManifestExtensionId)' != 'PaneSail'" Text="Store manifest version or activation identities do not match the Store build." />
+    <Error Condition="'$(_StoreUniversalMin)' != '10.0.22000.0' or '$(_StoreDesktopMin)' != '10.0.22000.0' or '$(_StoreUniversalMax)' != '10.0.26100.0' or '$(_StoreDesktopMax)' != '10.0.26100.0'" Text="Store manifest must target the planned Windows 11 minimum and tested SDK version." />
+  </Target>
+
+  <!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WindowPalette.Core\WindowPalette.Core.csproj" />
+    <ProjectReference Include="..\WindowPalette.Windows\WindowPalette.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CommandPalette.Extensions" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" />
+    <PackageReference Include="Shmuelie.WinRTServer" />
+
+    <!-- Needed to enable building an MSIX package -->
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IsAotCompatible>true</IsAotCompatible>
+
+    <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
+    <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
+    <!-- Suppress DynamicallyAccessedMemberTypes.PublicParameterlessConstructor in fallback code path of Windows SDK projection -->
+    <WarningsNotAsErrors>IL2081;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+
+    <!-- When publishing trimmed, make sure to treat trimming warnings as build errors -->
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <!-- In Debug builds, trimming is disabled by default, but all the trim &
+         AOT warnings are enabled. This gives debug builds a tighter inner loop,
+         while at least warning about future trim violations -->
+    <PublishTrimmed>false</PublishTrimmed>
+
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'!='Debug'">
+    <!-- In Release builds, trimming is enabled by default.
+         feel free to disable this if needed -->
+    <PublishTrimmed Condition="'$(PaneSailStoreBuild)' != 'true'">true</PublishTrimmed>
+    <PublishTrimmed Condition="'$(PaneSailStoreBuild)' == 'true'">false</PublishTrimmed>
+
+    <!-- In release, also ignore the aforementioned ILLink warning -->
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

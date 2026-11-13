@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <Platforms>x64;ARM64</Platforms>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <_SkipUpgradeNetAnalyzersNuGetWarning>true</_SkipUpgradeNetAnalyzersNuGetWarning>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+  </PropertyGroup>
+  <!-- Store builds have a different package/COM identity and isolated outputs. -->
+  <PropertyGroup Condition="'$(PaneSailStoreBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);PANESAIL_STORE</DefineConstants>
+    <BaseIntermediateOutputPath>obj\store\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\store\</BaseOutputPath>
+    <!-- Exclude both ordinary development outputs and isolated Store outputs. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,16 @@
+# Local build output, IDE state, and task-only installation/verification artefacts.
+.vs/
+**/bin/
+**/obj/
+**/AppPackages/
+**/BundleArtifacts/
+.local/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.pubxml.user
+*.pfx
+*.cer
+*.binlog
+# Deliberately track Properties/launchSettings.json and *.pubxml.
